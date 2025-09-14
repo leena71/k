@@ -1,175 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Math Adventure Game</title>
-    <style>
-        body {
-            font-family: 'Comic Sans MS', cursive;
-            background: linear-gradient(to right, #ffe259, #ffa751);
-            color: #333;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="UTF-8">
+  <title>Math Adventure Game</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: url('https://i.imgur.com/Bf0MJef.png') center/cover no-repeat;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
 
-        .container {
-            padding: 30px;
-        }
+    .game-container {
+      background: rgba(255, 255, 255, 0.9);
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 30px;
+      border-radius: 25px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
 
-        h1 {
-            color: #d32f2f;
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
+    .character {
+      font-size: 5em;
+      margin-bottom: 10px;
+    }
 
-        .character {
-            font-size: 3em;
-        }
+    .speech {
+      font-size: 1.6em;
+      background: #fff6aa;
+      border: 3px solid #ffd600;
+      border-radius: 15px;
+      padding: 15px 20px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
 
-        .scoreboard {
-            font-size: 1.2em;
-            margin-bottom: 20px;
-        }
+    .problem {
+      font-size: 3em;
+      margin: 20px 0;
+    }
 
-        .problem {
-            font-size: 2.5em;
-            margin: 20px 0;
-        }
+    .choices {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
 
-        input[type="number"] {
-            font-size: 1.5em;
-            padding: 10px;
-            width: 100px;
-            text-align: center;
-        }
+    .choice-button {
+      font-size: 2em;
+      padding: 20px 30px;
+      border: none;
+      border-radius: 15px;
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-        .buttons {
-            margin-top: 15px;
-        }
+    .choice-button:hover {
+      background-color: #45a049;
+    }
 
-        button {
-            font-size: 1.2em;
-            padding: 10px 20px;
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin: 5px;
-            border-radius: 10px;
-        }
+    .feedback {
+      font-size: 2em;
+      font-weight: bold;
+      margin-top: 15px;
+      height: 40px;
+    }
 
-        button:hover {
-            background-color: #45a049;
-        }
+    .next-btn {
+      display: none;
+      font-size: 1.2em;
+      margin-top: 20px;
+      padding: 12px 25px;
+      border-radius: 10px;
+      background: #03a9f4;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
 
-        .feedback {
-            font-size: 1.8em;
-            margin-top: 20px;
-            font-weight: bold;
-            height: 40px;
-        }
-
-        .stars {
-            font-size: 1.8em;
-            color: gold;
-            margin-top: 10px;
-        }
-
-    </style>
+    .next-btn:hover {
+      background: #0288d1;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="character">🧙‍♂️ Math Wizard</div>
-        <h1>Math Adventure: Addition Quest</h1>
 
-        <div class="scoreboard">
-            Score: <span id="score">0</span> | Question <span id="questionNumber">1</span>/10
-        </div>
+<div class="game-container">
+  <div class="character">🧚‍♀️</div>
+  <div class="speech" id="speech">Hi! Let’s solve a fun math problem!</div>
+  <div class="problem" id="problem">2 + 3 = ?</div>
+  <div class="choices" id="choices"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="nextBtn" onclick="nextProblem()">Next</button>
+</div>
 
-        <div class="problem" id="problem">Loading...</div>
-        <input type="number" id="answer" placeholder="Your answer" autocomplete="off" />
-        
-        <div class="buttons">
-            <button onclick="checkAnswer()">Check</button>
-            <button onclick="nextQuestion()">Next</button>
-        </div>
+<script>
+  let currentAnswer = 0;
+  let questionCount = 0;
+  const totalQuestions = 5;
 
-        <div class="feedback" id="feedback"></div>
-        <div class="stars" id="stars"></div>
-    </div>
+  const problemEl = document.getElementById('problem');
+  const feedbackEl = document.getElementById('feedback');
+  const choicesEl = document.getElementById('choices');
+  const speechEl = document.getElementById('speech');
+  const nextBtn = document.getElementById('nextBtn');
 
-    <script>
-        let score = 0;
-        let questionCount = 0;
-        const totalQuestions = 10;
-        let currentAnswer = 0;
+  function getRandomProblem() {
+    const a = Math.floor(Math.random() * 10) + 1;
+    const b = Math.floor(Math.random() * 10) + 1;
+    currentAnswer = a + b;
+    return { question: `${a} + ${b}`, answer: currentAnswer };
+  }
 
-        const problemEl = document.getElementById('problem');
-        const answerEl = document.getElementById('answer');
-        const feedbackEl = document.getElementById('feedback');
-        const starsEl = document.getElementById('stars');
-        const scoreEl = document.getElementById('score');
-        const questionNumberEl = document.getElementById('questionNumber');
+  function generateChoices(correctAnswer) {
+    const choices = new Set();
+    choices.add(correctAnswer);
 
-        function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
+    while (choices.size < 4) {
+      choices.add(correctAnswer + Math.floor(Math.random() * 5 + 1) * (Math.random() > 0.5 ? 1 : -1));
+    }
 
-        function generateProblem() {
-            const a = getRandomInt(1, 10);
-            const b = getRandomInt(1, 10);
-            currentAnswer = a + b;
-            problemEl.textContent = `${a} + ${b} = ?`;
-            answerEl.value = '';
-            feedbackEl.textContent = '';
-            starsEl.textContent = '';
-        }
+    return Array.from(choices).sort(() => Math.random() - 0.5);
+  }
 
-        function checkAnswer() {
-            const userAnswer = parseInt(answerEl.value);
-            if (isNaN(userAnswer)) {
-                feedbackEl.textContent = '⛔️ Please enter a number!';
-                feedbackEl.style.color = 'red';
-                return;
-            }
+  function showProblem() {
+    const { question, answer } = getRandomProblem();
+    problemEl.textContent = `${question} = ?`;
+    feedbackEl.textContent = '';
+    speechEl.textContent = `Can you solve: ${question}?`;
+    nextBtn.style.display = 'none';
 
-            if (userAnswer === currentAnswer) {
-                feedbackEl.textContent = '✅ Correct!';
-                feedbackEl.style.color = 'green';
-                starsEl.textContent = '🌟 Great job!';
-                score++;
-            } else {
-                feedbackEl.textContent = `❌ Oops! It was ${currentAnswer}`;
-                feedbackEl.style.color = 'red';
-                starsEl.textContent = '';
-            }
+    const choices = generateChoices(answer);
+    choicesEl.innerHTML = '';
 
-            scoreEl.textContent = score;
-        }
+    choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.textContent = choice;
+      btn.className = 'choice-button';
+      btn.onclick = () => checkAnswer(choice);
+      choicesEl.appendChild(btn);
+    });
+  }
 
-        function nextQuestion() {
-            questionCount++;
-            if (questionCount >= totalQuestions) {
-                endGame();
-            } else {
-                questionNumberEl.textContent = questionCount + 1;
-                generateProblem();
-            }
-        }
+  function checkAnswer(choice) {
+    if (choice === currentAnswer) {
+      feedbackEl.textContent = '🎉 Correct!';
+      feedbackEl.style.color = 'green';
+      speechEl.textContent = 'Yay! You did it!';
+    } else {
+      feedbackEl.textContent = '❌ Try again!';
+      feedbackEl.style.color = 'red';
+      speechEl.textContent = 'Oops! Let’s try again!';
+      return;
+    }
 
-        function endGame() {
-            problemEl.textContent = "🎉 Game Over!";
-            feedbackEl.textContent = `Your final score is ${score}/${totalQuestions}`;
-            feedbackEl.style.color = 'blue';
-            starsEl.textContent = score >= 8 ? '🏆 You’re a Math Master!' : '👍 Keep practicing!';
-            document.querySelector('.buttons').style.display = 'none';
-            answerEl.style.display = 'none';
-        }
+    nextBtn.style.display = 'inline-block';
+    // disable all buttons
+    document.querySelectorAll('.choice-button').forEach(btn => btn.disabled = true);
+  }
 
-        // Start the game
-        generateProblem();
-    </script>
+  function nextProblem() {
+    questionCount++;
+    if (questionCount >= totalQuestions) {
+      speechEl.textContent = '🏁 You finished the game! Well done!';
+      problemEl.textContent = '';
+      choicesEl.innerHTML = '';
+      feedbackEl.textContent = '';
+      nextBtn.style.display = 'none';
+    } else {
+      showProblem();
+    }
+  }
+
+  showProblem();
+</script>
 </body>
 </html>
 
